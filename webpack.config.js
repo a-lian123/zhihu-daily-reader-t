@@ -5,7 +5,7 @@ var ExtractTextPlugin = require("extract-text-webpack-plugin");
 module.exports = {
 	entry:{
 		index: path.resolve(srcPath, "./index"),
-		// error_404: path.resolve(srcPath, "./common/error_404")
+		error_404: path.resolve(srcPath, "./common/error_404")
 	},
 	output:{
 		path: path.resolve(srcPath, "./build"),

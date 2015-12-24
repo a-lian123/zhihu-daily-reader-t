@@ -29,3 +29,20 @@ body.modal-open .Navbar {
   padding-top: 6px!important;
   padding-bottom: 6px!important;
 }
+.clear-side-padding {
+  padding-left: 0;
+  padding-right: 0;
+}
+.DailyPage {
+  padding-left: 0;
+  padding-right: 0;
+}
+.DailyPage .CarouselContainer {
+  padding-left: 0;
+  padding-right: 0;
+  background-color: #EEE;
+}
+.DailyPage .CarouselContainer .Carousel {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
