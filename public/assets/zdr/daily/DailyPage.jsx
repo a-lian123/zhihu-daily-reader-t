@@ -151,9 +151,9 @@ var DailyPage = React.createClass({
 	},
 
 	render: function(){
-		<div className = "CarouselContainer container-fluid">
-			<Carousel onClick = {this._carouselClickHandler} indexes={this.state.storyIndexes}/>
-		</div>
+		// <div className = "CarouselContainer container-fluid">
+		// 	// <Carousel onClick = {this._carouselClickHandler} indexes={this.state.storyIndexes}/>
+		// </div>
 		var page = 
 				<div clssname = "DailyPage container-fluid">
 					<FlexView onTileClick={this._tileClickHandler} indexes={this.state.stroyIndexes} loading={this.state.loading}/>

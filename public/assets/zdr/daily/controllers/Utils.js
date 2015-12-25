@@ -5,7 +5,7 @@ var monent = require("moment");
  * @param String p_date 形如 "20150727"的日期字符串
  * @retrun String 返回激素计算结果，形如"20150726"; 如果 p_date 是无效的日期字符串，则将其原返回
  */
-function nextZhuhuDay(p_date){
+function nextZhihuDay(p_date){
 	return subZhihuDay(p_date, -1);
 }
 
@@ -35,5 +35,5 @@ function subZhihuDay(p_date, p_day){
 }
 
 module.exports.nextZhihuDay = nextZhihuDay;
-module.exports.prevZhihuDay = prevZhiDay;
+module.exports.prevZhihuDay = prevZhihuDay;
 module.exports.subZhihuDay = subZhihuDay;

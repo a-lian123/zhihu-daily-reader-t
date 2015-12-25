@@ -1,9 +1,9 @@
 require("./res/FlexView.less");
 
 var _= require("lodash");
-var classNames = require("clasnames");
+var classNames = require("classnames");
 var React = require("react");
-var PureRenderMixin = react.addons.PureRenderMixin; 
+var PureRenderMixin = React.addons.PureRenderMixin; 
 var DailyManager= require("../controllers/DailyManager");
 var Preloader = require("./Preloader");
 
@@ -39,7 +39,7 @@ var FlexTile = React.createClass({
 			item = 
 				<div id={"story"+ story.id} className="flex-tile">
 					<div className="flex-tile-content">
-						<div className="flex-tile-picture" sytle = {{backgroundImage:"url(" + story.image+ ")"+}} onClick = {this.handleClick}/>
+						<div className="flex-tile-picture" sytle = {{backgroundImage:"url(" + story.image+ ")"}} onClick = {this.handleClick}/>
 						<div className="flex-tile-title">
 							<a className="flex-tile-link" href="javascript:;" onClick={this.handleClick}>
 								{story.title}
@@ -63,8 +63,8 @@ var FlexTile = React.createClass({
 var FlexView = React.createClass({
 	mixins: [PureRenderMixin],
 	render: function(){
-		vat that = this;
-		var itmes = _.map(that.props.indexes, function(value){
+		var that = this;
+		var items = _.map(that.props.indexes, function(value){
 			return (<FlexTile onClick={that.props.onTileClick} key = {"tile" + value} id = {value}/>);
 		});
 		var preloaderClasses = classNames(
@@ -77,9 +77,9 @@ var FlexView = React.createClass({
 		return (
 			<div className="FlexView">
 				<div className="flex-content">
-					{item}
+					{items}
 				</div>
-				<Preloader clasName={proloaderClasses}/>
+				<Preloader clasName={preloaderClasses}/>
 			</div>
 		)
 	}

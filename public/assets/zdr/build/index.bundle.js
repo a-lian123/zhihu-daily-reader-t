@@ -193,11 +193,11 @@
 	var React = __webpack_require__(9);
 	var ReactUpdate = React.addons.update;
 	var PureRenderMixin = React.addons.PureRenderMixin;
-	var DailyManager = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./controllers/DailyManager\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
-	var Utils = __webpack_require__(19);
+	var DailyManager = __webpack_require__(18);
+	var Utils = __webpack_require__(20);
 
 	// var Carousel = require("./components/Carousel");
-	var FlexView = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./components/FlexView\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+	var FlexView = __webpack_require__(21);
 	// var ArticleViw = require("./components/ArticleView");
 
 	/**
@@ -339,9 +339,9 @@
 		},
 
 		render: function(){
-			React.createElement("div", {className: "CarouselContainer container-fluid"}, 
-				React.createElement(Carousel, {onClick: this._carouselClickHandler, indexes: this.state.storyIndexes})
-			)
+			// <div className = "CarouselContainer container-fluid">
+			// 	// <Carousel onClick = {this._carouselClickHandler} indexes={this.state.storyIndexes}/>
+			// </div>
 			var page = 
 					React.createElement("div", {clssname: "DailyPage container-fluid"}, 
 						React.createElement(FlexView, {onTileClick: this._tileClickHandler, indexes: this.state.stroyIndexes, loading: this.state.loading})
@@ -366,8 +366,72 @@
 	module.exports = moment;
 
 /***/ },
-/* 18 */,
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(19);
+	var $ = __webpack_require__(6);
+
+	var _stories = {};
+
+	/**
+	 * 获取目前已从服务端获取到的所有日报内容的缓存（以日报id进行检索，无序，请勿用index检索）
+	 */
+	function getFetchedStories(){
+		return _stories;
+	}
+
+	/**
+	 * 获取最新热门日报索引
+	 */
+	function getTopStoryIndexes(clallback){
+		$.get("/api/4/news/top", function(p_data){
+			callback(p_data);
+		}).fail(function(){
+			callback({error:"error"});
+		});
+	}
+
+	/**
+	 * 获取指定日期的日报索引
+	 * @param String p_date 指定的日期。如果未指定，则返回最新日报的索引；如果小于20130519，则返回{}。
+	 */
+	function getStoryIndexes(callback, p_date){
+		if(_.isEmpty(p_date)){
+			$.get("/api/4/news/before", function(p_data){
+				callback(p_date);
+			}).fail(function(){
+				callback({error:"error"});
+			});
+		}
+	}
+
+	/**
+	 * 获取指定唯一标识的日报
+	 * @param String p_id 指定的唯一标识
+	 */
+	 function getStory(callback, p_id){
+	 	$.get("/api/4/news/" + p_id, function(p_data){
+	 		_stories[p_id] = p_data;
+	 		callback(p_data);
+	 	}).fail(function(){
+	 		callback({error:"error"});
+	 	});
+	 }
+	 module.exports.getTopStoryIndexes = getTopStoryIndexes;
+	 module.exports.getStoryIndexes = getStoryIndexes;
+	 module.exports.getStory = getStory;
+	 module.exports.getFetchedStories = getFetchedStories;
+
+
+/***/ },
 /* 19 */
+/***/ function(module, exports) {
+
+	module.exports = _;
+
+/***/ },
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var monent = __webpack_require__(17);
@@ -377,7 +441,7 @@
 	 * @param String p_date 形如 "20150727"的日期字符串
 	 * @retrun String 返回激素计算结果，形如"20150726"; 如果 p_date 是无效的日期字符串，则将其原返回
 	 */
-	function nextZhuhuDay(p_date){
+	function nextZhihuDay(p_date){
 		return subZhihuDay(p_date, -1);
 	}
 
@@ -407,8 +471,203 @@
 	}
 
 	module.exports.nextZhihuDay = nextZhihuDay;
-	module.exports.prevZhihuDay = prevZhiDay;
+	module.exports.prevZhihuDay = prevZhihuDay;
 	module.exports.subZhihuDay = subZhihuDay;
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(22);
+
+	var _= __webpack_require__(19);
+	var classNames = __webpack_require__(24);
+	var React = __webpack_require__(9);
+	var PureRenderMixin = React.addons.PureRenderMixin; 
+	var DailyManager= __webpack_require__(18);
+	var Preloader = __webpack_require__(25);
+
+	var FlexTile = React.createClass({displayName: "FlexTile",
+		mixins: [PureRenderMixin],
+		getInitialState: function(){
+			return {
+				story:null
+			};
+		},
+		componentDidMount: function(){
+			if(this.props.id){
+				DailyManager.getStory(function(data){
+					if(this.isMounted() && data){
+						this.setState({
+							stroy:data
+						});
+					}
+				}.bind(this), this.props.id);
+			}
+		},
+		handleClick: function(e){
+			if(_.isFunction(this.props.onClick)){
+				this.props.onClick({
+					story:this.state.story
+				});
+			}
+		},
+		render: function(){
+			var item = null;
+			var stroy = this.state.story;
+			if(story){
+				item = 
+					React.createElement("div", {id: "story"+ story.id, className: "flex-tile"}, 
+						React.createElement("div", {className: "flex-tile-content"}, 
+							React.createElement("div", {className: "flex-tile-picture", sytle: {backgroundImage:"url(" + story.image+ ")"}, onClick: this.handleClick}), 
+							React.createElement("div", {className: "flex-tile-title"}, 
+								React.createElement("a", {className: "flex-tile-link", href: "javascript:;", onClick: this.handleClick}, 
+									story.title
+								)
+							)
+						), 
+						React.createElement("div", {className: "flex-tile-stripe"}), 
+						React.createElement("div", {className: "flex-tile-footer"}, 
+							React.createElement("div", {className: "flex-tile-footer-right-buttons"}, 
+								React.createElement("a", {href: story.shareURL, target: "_blank"}, 
+									React.createElement("span", {className: "glyphicon glyphicon-new-window", title: "在新标签页中打开原文"})
+								)
+							)
+						)
+					);
+			}
+			return item;
+		}
+	});
+
+	var FlexView = React.createClass({displayName: "FlexView",
+		mixins: [PureRenderMixin],
+		render: function(){
+			var that = this;
+			var items = _.map(that.props.indexes, function(value){
+				return (React.createElement(FlexTile, {onClick: that.props.onTileClick, key: "tile" + value, id: value}));
+			});
+			var preloaderClasses = classNames(
+				"flex-preloader",
+				{
+					"loading":this.props.loading
+				}
+			);
+
+			return (
+				React.createElement("div", {className: "FlexView"}, 
+					React.createElement("div", {className: "flex-content"}, 
+						items
+					), 
+					React.createElement(Preloader, {clasName: preloaderClasses})
+				)
+			)
+		}
+	});
+
+	module.exports = FlexView;
+
+/***/ },
+/* 22 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 23 */,
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2015 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = '';
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes += ' ' + arg;
+				} else if (Array.isArray(arg)) {
+					classes += ' ' + classNames.apply(null, arg);
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes += ' ' + key;
+						}
+					}
+				}
+			}
+
+			return classes.substr(1);
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(26);
+
+	var _=__webpack_require__(19);
+	var React = __webpack_require__(9);
+	var classNames = __webpack_require__(24);
+
+	var Preloader = React.createClass({displayName: "Preloader",
+		getDefaulProps: function(){
+			return{
+				className: null
+			};
+		},
+
+		render: function(){
+			var classes = "Preloader";
+			if(!_.isEmpty(this.props.clssName)){
+				classes = classes + " " + this.props.className;
+			}
+
+			return (
+				React.createElement("div", {className: classes}, 
+					React.createElement("span", {className: "wave1"}), 
+					React.createElement("span", {className: "wave2"}), 
+					React.createElement("span", {className: "wave3"}), 
+					React.createElement("span", {className: "wave4"}), 
+					React.createElement("span", {className: "wave5"})
+				)
+			);
+		}
+	})
+
+/***/ },
+/* 26 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
 
 /***/ }
 /******/ ]);
