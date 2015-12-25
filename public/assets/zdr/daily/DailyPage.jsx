@@ -34,7 +34,7 @@ var DailyPage = React.createClass({
 			loading: false
 		};
 	},
-	componentsDidMount:function(){
+	componentDidMount:function(){
 		//1、初始化
 		this._$ArticleView = $("#ArticleView");
 		this._$ArticleViewContent = $("#ArticleView .modal-content");
@@ -72,13 +72,15 @@ var DailyPage = React.createClass({
 	 * 加载最新日报（默认仅加载今日、昨日的日报）（FlexView）
 	 */
 	_loadOtherStories: function(){
+
 		this.setState({
 			loading:true
 		}, function(){
 			DailyManager.getStoryIndexes(function(p_data){
+
 				if(this.isMounted() && p_data && !p_data.error){
 					this._currentLoadedDate = p_data.date;
-					this.addStoryIndexes(p_data.indexes);
+					this._addStoryIndexes(p_data.indexes);
 					this._loadPrevStoires();
 				}
 
@@ -116,11 +118,27 @@ var DailyPage = React.createClass({
 	 * 增量加载指定的日报
 	 */
 	_addStoryIndexes: function(p_indexes){
-		this.setState({
-			storyIndexes: ReactUpdate(this.state.storyIndexes,{
-				$push: p_indexes
-			})
-		})
+		this.setState(
+        {
+            storyIndexes: ReactUpdate(this.state.storyIndexes,
+            {
+                $push: p_indexes
+            })
+        });
+	},
+
+	_tileClickHandler: function(){
+		this._showArticle(e.story);
+	},
+
+	/**
+	 * 打开iaArticleView并加载制定的日报
+	 */
+	_showArticle: function(p_story){
+		// this._loadArticle(p_story, function(){
+		// 	this._setCurrentIndex(this._getStoryIndexesById(p_story.id);
+		// 	this._openArticle
+		// });
 	},
 
 	/**

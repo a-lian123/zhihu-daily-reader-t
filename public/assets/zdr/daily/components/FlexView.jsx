@@ -65,6 +65,7 @@ var FlexView = React.createClass({
 	render: function(){
 		var that = this;
 		var items = _.map(that.props.indexes, function(value){
+
 			return (<FlexTile onClick={that.props.onTileClick} key = {"tile" + value} id = {value}/>);
 		});
 		var preloaderClasses = classNames(

@@ -13,7 +13,7 @@ function getFetchedStories(){
 /**
  * 获取最新热门日报索引
  */
-function getTopStoryIndexes(clallback){
+function getTopStoryIndexes(callback){
 	$.get("/api/4/news/top", function(p_data){
 		callback(p_data);
 	}).fail(function(){
@@ -26,10 +26,23 @@ function getTopStoryIndexes(clallback){
  * @param String p_date 指定的日期。如果未指定，则返回最新日报的索引；如果小于20130519，则返回{}。
  */
 function getStoryIndexes(callback, p_date){
+	console.log(p_date);
 	if(_.isEmpty(p_date)){
-		$.get("/api/4/news/before", function(p_data){
-			callback(p_date);
-		}).fail(function(){
+		// $.get("/api/4/news/before", function(p_data){
+		// 	callback(p_data);
+		// }).fail(function(){
+		// 	callback({error:"error"});
+		// });
+
+		 $.get("/api/4/news/before", function (p_data)
+        {
+            callback(p_data);
+        }).fail(function ()
+        {
+            callback({ error: "error" });
+        });
+	}else{
+		$.get("/api/4/news/before/" + p_date, callback).fail(function(){
 			callback({error:"error"});
 		});
 	}

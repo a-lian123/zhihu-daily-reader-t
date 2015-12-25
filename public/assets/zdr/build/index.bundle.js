@@ -222,7 +222,7 @@
 				loading: false
 			};
 		},
-		componentsDidMount:function(){
+		componentDidMount:function(){
 			//1、初始化
 			this._$ArticleView = $("#ArticleView");
 			this._$ArticleViewContent = $("#ArticleView .modal-content");
@@ -260,13 +260,15 @@
 		 * 加载最新日报（默认仅加载今日、昨日的日报）（FlexView）
 		 */
 		_loadOtherStories: function(){
+
 			this.setState({
 				loading:true
 			}, function(){
 				DailyManager.getStoryIndexes(function(p_data){
+
 					if(this.isMounted() && p_data && !p_data.error){
 						this._currentLoadedDate = p_data.date;
-						this.addStoryIndexes(p_data.indexes);
+						this._addStoryIndexes(p_data.indexes);
 						this._loadPrevStoires();
 					}
 
@@ -304,11 +306,27 @@
 		 * 增量加载指定的日报
 		 */
 		_addStoryIndexes: function(p_indexes){
-			this.setState({
-				storyIndexes: ReactUpdate(this.state.storyIndexes,{
-					$push: p_indexes
-				})
-			})
+			this.setState(
+	        {
+	            storyIndexes: ReactUpdate(this.state.storyIndexes,
+	            {
+	                $push: p_indexes
+	            })
+	        });
+		},
+
+		_tileClickHandler: function(){
+			this._showArticle(e.story);
+		},
+
+		/**
+		 * 打开iaArticleView并加载制定的日报
+		 */
+		_showArticle: function(p_story){
+			// this._loadArticle(p_story, function(){
+			// 	this._setCurrentIndex(this._getStoryIndexesById(p_story.id);
+			// 	this._openArticle
+			// });
 		},
 
 		/**
@@ -384,7 +402,7 @@
 	/**
 	 * 获取最新热门日报索引
 	 */
-	function getTopStoryIndexes(clallback){
+	function getTopStoryIndexes(callback){
 		$.get("/api/4/news/top", function(p_data){
 			callback(p_data);
 		}).fail(function(){
@@ -397,10 +415,23 @@
 	 * @param String p_date 指定的日期。如果未指定，则返回最新日报的索引；如果小于20130519，则返回{}。
 	 */
 	function getStoryIndexes(callback, p_date){
+		console.log(p_date);
 		if(_.isEmpty(p_date)){
-			$.get("/api/4/news/before", function(p_data){
-				callback(p_date);
-			}).fail(function(){
+			// $.get("/api/4/news/before", function(p_data){
+			// 	callback(p_data);
+			// }).fail(function(){
+			// 	callback({error:"error"});
+			// });
+
+			 $.get("/api/4/news/before", function (p_data)
+			    {
+			        callback(p_data);
+			    }).fail(function ()
+			    {
+			        callback({ error: "error" });
+			    });
+		}else{
+			$.get("/api/4/news/before/" + p_date, callback).fail(function(){
 				callback({error:"error"});
 			});
 		}
@@ -545,6 +576,7 @@
 		render: function(){
 			var that = this;
 			var items = _.map(that.props.indexes, function(value){
+
 				return (React.createElement(FlexTile, {onClick: that.props.onTileClick, key: "tile" + value, id: value}));
 			});
 			var preloaderClasses = classNames(
@@ -661,7 +693,8 @@
 				)
 			);
 		}
-	})
+	});
+	module.exports = Preloader;
 
 /***/ },
 /* 26 */

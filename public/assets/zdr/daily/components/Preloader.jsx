@@ -27,4 +27,5 @@ var Preloader = React.createClass({
 			</div>
 		);
 	}
-})
+});
+module.exports = Preloader;
