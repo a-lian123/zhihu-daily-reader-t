@@ -19,7 +19,7 @@ var FlexTile = React.createClass({
 			DailyManager.getStory(function(data){
 				if(this.isMounted() && data){
 					this.setState({
-						stroy:data
+						story:data
 					});
 				}
 			}.bind(this), this.props.id);
@@ -34,12 +34,12 @@ var FlexTile = React.createClass({
 	},
 	render: function(){
 		var item = null;
-		var stroy = this.state.story;
+		var story = this.state.story;
 		if(story){
 			item = 
 				<div id={"story"+ story.id} className="flex-tile">
 					<div className="flex-tile-content">
-						<div className="flex-tile-picture" sytle = {{backgroundImage:"url(" + story.image+ ")"}} onClick = {this.handleClick}/>
+						<div className="flex-tile-picture" style={{backgroundImage: "url(" + story.image + ")"}} onClick = {this.handleClick}/>
 						<div className="flex-tile-title">
 							<a className="flex-tile-link" href="javascript:;" onClick={this.handleClick}>
 								{story.title}
@@ -74,7 +74,6 @@ var FlexView = React.createClass({
 				"loading":this.props.loading
 			}
 		);
-
 		return (
 			<div className="FlexView">
 				<div className="flex-content">

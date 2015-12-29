@@ -26,7 +26,6 @@ function getTopStoryIndexes(callback){
  * @param String p_date 指定的日期。如果未指定，则返回最新日报的索引；如果小于20130519，则返回{}。
  */
 function getStoryIndexes(callback, p_date){
-	console.log(p_date);
 	if(_.isEmpty(p_date)){
 		// $.get("/api/4/news/before", function(p_data){
 		// 	callback(p_data);

@@ -198,7 +198,7 @@
 
 	// var Carousel = require("./components/Carousel");
 	var FlexView = __webpack_require__(21);
-	// var ArticleViw = require("./components/ArticleView");
+	var ArticleView = __webpack_require__(28);
 
 	/**
 	 *  知乎日报页面
@@ -269,7 +269,7 @@
 					if(this.isMounted() && p_data && !p_data.error){
 						this._currentLoadedDate = p_data.date;
 						this._addStoryIndexes(p_data.indexes);
-						this._loadPrevStoires();
+						this._loadPrevStories();
 					}
 
 					this.setState({
@@ -283,7 +283,7 @@
 		/**
 		 * 加载前一天的日报（相对当前已加载日报的日期）
 		 */
-		_loadPrevStoires: function(p_callback){
+		_loadPrevStories: function(p_callback){
 			this.setState({
 				loading:true
 			},function(){
@@ -315,19 +315,112 @@
 	        });
 		},
 
-		_tileClickHandler: function(){
+		_tileClickHandler: function(e){
 			this._showArticle(e.story);
 		},
 
 		/**
-		 * 打开iaArticleView并加载制定的日报
+		 * 打开ArticleView并加载制定的日报
 		 */
 		_showArticle: function(p_story){
-			// this._loadArticle(p_story, function(){
-			// 	this._setCurrentIndex(this._getStoryIndexesById(p_story.id);
-			// 	this._openArticle
-			// });
+			this._loadArticle(p_story, function(){
+				this._setCurrentIndex(this._getStoryIndexById(p_story.id));
+				this._openArticleView();
+			});
 		},
+
+		/**
+		 * 打开ArticleView
+		 */
+
+		_openArticleView: function(){
+			if(!this._isArticleViewVisible){
+				this._$ArticleView.modal();
+			}
+		},
+
+		/**
+		 * 获取指定唯一标识的日报索引
+		 */
+		_getStoryIndexById: function(p_id){
+			return _.indexOf(this.state.storyIndexes, p_id);
+		},
+
+		/**
+	     * 向ArticleView 中加载指定的日报（仅改变内容不改变转改
+	     */
+	    _loadArticle: function(p_story, p_callback){
+	    	if(p_story){
+	    		this.setState({
+	    			currentStroy: p_story
+	    		}, p_callback);
+	    	}
+	    },
+
+	    /**
+	     * 打开ArticleView
+	     */
+	    _opendArticleView: function(){
+	    	if(!this._isArticleViewVisible){
+	    		if(!this._isArticleViewVisible){
+	    			this._$ArticleView.modal();
+	    		}
+	    	}
+	    },
+
+	    /**
+	     * 关闭ArticleView
+	     */
+	    _closeArticleView: function(){
+	    	if(this._isArticleViewVisible){
+	    		this._$ArticleView.modal("hide");
+	    	}
+	    }, 
+
+	    /**
+	     * 当前日报索引增加
+	     */
+	    _addCurrentIndex: function(){
+	    	if(this._currentIndex + 1 < this.state.stroyIndexes.length){
+	    		this._setCurrentIndex(this._currentIndex + 1);
+	    	}
+	    },
+
+	    /**
+	     * 设置日报索引
+	     */
+	    _setCurrentIndex: function(p_index){
+	    	var e = {oldIndex: this._currentIndex, newIndex: p_index};
+	    	this._currentIndex = p_index;
+	    	this._currentIndexChangeHandler(e);
+	    },
+
+	    _currentIndexChangeHandler: function(e){
+	    	this._updateCurrentTile(e.oldIndex, e.newIndex);
+	    },
+
+	    /**
+	     * 更新当前 FlexTile样式
+	     */
+	    _updateCurrentTile: function(p_oldIndex, p_newIndex){
+	    	if(p_oldIndex >= 0){
+	    		$("#stroy" + this.state.storyIndexes[p_oldIndex]).removeClass('current');
+	    	}
+
+	    	var $newTile = $('#story' + this.state.storyIndexes[p_newIndex]);
+	    	$newTile.addClass('current');
+
+	    	//判断是否需要移动滚动跳的位置，以便内容可见
+	    	var newTop = $newTile.offset().top - 71;
+	    	var moveDown = newTop + $newTile.outerHeight(true) - $(document).scrollTop() > $(window).height();
+	    	var moveUp = newTop < $(document).scrollTop();
+	    	if(moveDown || moveUp){
+	    		//此处用 animate特的话， 存在问题， 按住按键不放会出现问题
+	    		$(document).scrollTop(newTop);
+	    	}
+	    },
+
+
 
 		/**
 		 * 订购事件
@@ -345,6 +438,9 @@
 				this._isArticleViewVisible = true;
 			}.bind(this));
 
+			$(document).on("keydown", this._globalKeydownHandler);
+			$(document).on("scroll", this._scrollHandler);
+
 		},
 
 		/**
@@ -356,13 +452,144 @@
 			$(document).on("scroll");
 		},
 
+		/**
+		 * 处理全局案件事件。
+		 */
+		_globalKeydownHandler:function(e){
+			var code = e.which;
+			var extraKey = e.altKey || e.ctrlKey || e.shiftKey || e.metaKey;
+			if(!extraKey){
+				if(code == 27){
+					//ESC: 关闭 ArticleView
+					this._closeArticleView();
+				}else if(code == 74){
+					//J: ArticleView 显示下一个日报（如果未打开 ArticleView 则自动打开）
+					this._keydownShowNextStory();
+				}else if(code == 75){
+					//K: ArticleView 显示上一个日报（如果当前未打开 ArticleVeiw 则自动打开）
+					this._keydownShowPrevStory();
+				}else if(code ==13 || code == 79){
+					//Enter 0: 打开选中的日报
+					if(!this._isArticleViewVisible){
+						this._showArticle(DailyManager.getFetchedStories()[this.state._currentIndex]);
+					}
+				}else if(code == 37){
+					//左方向： 切换到上一个日报
+					if(this._isArticleViewVisible){
+						this._keydownShowPrevStory();
+					}else{
+						this._minusCurrentIndex();
+					}
+				}else if(code == 39){
+					//右方向：切换到下一个日报
+					if(this._isArticleViewVisible){
+						this._keydownShowNextStory();
+					}else{
+						this._addCurrentIndex();
+					}
+				}else if(code == 86){
+					//V: 打开原始链接
+					if(this._isArticleViewVisible){
+						$(".view-more a").map(function(p_index, p_object){
+							p_object.click();
+						});
+					}
+				}
+			}
+		},
+
+		/**
+		* 当前日报索引减少1
+		*/
+		_minusCurrentIndex: function(){
+			if(this._currentIndex > 0){
+				this._setCurrentIndex(this._currentIndex - 1);
+			}
+		},
+
+		/**
+		 * 当前日报索引增加1
+		 */
+		_addCurrentIndex: function(){
+			if(this._currentIndex + 1 < this.state.storyIndexes.length){
+				this._setCurrentIndex(this._currentIndex + 1);
+			}
+		},
+
+		/**
+		 * ArricleView 显示下一个日报（如果当前未打开ArticleView则自动打开）
+		 */
+		_keydownShowNextStory: function(){
+			var index = this._currentIndex + 1;
+			if(index < this.state.storyIndexes.length){
+				if(!this._isLoading){
+					var story = DailyManager.getFetchedStories()[this.state.storyIndexes[index]];
+					if(this._isArticleViewVisible){
+						this._loadArticle(story, function(){
+							this._addCurrentIndex();
+							this._resetArticleViewScroll();
+						});
+					}
+				}else{
+					this._showArticle(story);
+				}
+			}else{
+				//自动加载前一天
+				if(!this._isLoading){
+					this._isLoading = true;
+					this._isloadPrevStories(function(){
+						this._isLoading = false;
+					}.bind(this));
+				}
+			}
+		},
+
+		/**
+		 * 显示上一个日报（如果没有打开ArticleView 则自动打开）
+		 */
+		_keydownShowPrevStory: function(){
+			var index = this._currentIndex -1;
+			if(index >= 0){
+				var story = DailyManager.getFetchedStories()[this.state.storyIndexes[index]];
+				if(this._isArticleViewVisible){
+					this._loadArticle(story, function(){
+						this._minusCurrentIndex();
+						this._resetArticleViewScroll();
+					});
+				}else{
+					this._showArticle(story);
+				}
+			}
+		},
+
+		/**
+		 * 垂直滚动动态加载内容
+		 */ 
+		_scrollHandler: function(){
+			if(!this._sLoading && ($(document).scrollTop() >= $(document).height() - $(window).height())){
+				this._isLoading = true;
+				this._loadPrevStories(function(){
+					this._isLoading = false;
+				}.bind(this));
+			}
+		},
+
+		/**
+		 * 重设Articleview 的垂直滚动条
+		 */
+		_resetArticleViewScroll:function(){
+			this._$ArticleViewContent.scrollTop(0);
+		},
+
+
 		render: function(){
 			// <div className = "CarouselContainer container-fluid">
 			// 	// <Carousel onClick = {this._carouselClickHandler} indexes={this.state.storyIndexes}/>
 			// </div>
 			var page = 
-					React.createElement("div", {clssname: "DailyPage container-fluid"}, 
-						React.createElement(FlexView, {onTileClick: this._tileClickHandler, indexes: this.state.stroyIndexes, loading: this.state.loading})
+					React.createElement("div", {className: "DailyPage container-fluid"}, 
+						React.createElement(FlexView, {onTileClick: this._tileClickHandler, indexes: this.state.storyIndexes, loading: this.state.loading}), 
+						React.createElement(ArticleView, {story: this.state.currentStroy})
 					);
 			return page;
 		}
@@ -415,7 +642,6 @@
 	 * @param String p_date 指定的日期。如果未指定，则返回最新日报的索引；如果小于20130519，则返回{}。
 	 */
 	function getStoryIndexes(callback, p_date){
-		console.log(p_date);
 		if(_.isEmpty(p_date)){
 			// $.get("/api/4/news/before", function(p_data){
 			// 	callback(p_data);
@@ -424,12 +650,12 @@
 			// });
 
 			 $.get("/api/4/news/before", function (p_data)
-			    {
-			        callback(p_data);
-			    }).fail(function ()
-			    {
-			        callback({ error: "error" });
-			    });
+	        {
+	            callback(p_data);
+	        }).fail(function ()
+	        {
+	            callback({ error: "error" });
+	        });
 		}else{
 			$.get("/api/4/news/before/" + p_date, callback).fail(function(){
 				callback({error:"error"});
@@ -530,7 +756,7 @@
 				DailyManager.getStory(function(data){
 					if(this.isMounted() && data){
 						this.setState({
-							stroy:data
+							story:data
 						});
 					}
 				}.bind(this), this.props.id);
@@ -545,12 +771,13 @@
 		},
 		render: function(){
 			var item = null;
-			var stroy = this.state.story;
+			var story = this.state.story;
 			if(story){
+				console.log();
 				item = 
 					React.createElement("div", {id: "story"+ story.id, className: "flex-tile"}, 
 						React.createElement("div", {className: "flex-tile-content"}, 
-							React.createElement("div", {className: "flex-tile-picture", sytle: {backgroundImage:"url(" + story.image+ ")"}, onClick: this.handleClick}), 
+							React.createElement("div", {className: "flex-tile-picture", style: {backgroundImage: "url(" + story.image + ")"}, onClick: this.handleClick}), 
 							React.createElement("div", {className: "flex-tile-title"}, 
 								React.createElement("a", {className: "flex-tile-link", href: "javascript:;", onClick: this.handleClick}, 
 									story.title
@@ -585,7 +812,7 @@
 					"loading":this.props.loading
 				}
 			);
-
+			console.log(that.props.indexes);
 			return (
 				React.createElement("div", {className: "FlexView"}, 
 					React.createElement("div", {className: "flex-content"}, 
@@ -698,6 +925,193 @@
 
 /***/ },
 /* 26 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 27 */,
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(29);
+
+	var $ = __webpack_require__(6);
+	var _ = __webpack_require__(19);
+	var classNames = __webpack_require__(24);
+	var React = __webpack_require__(9);
+	var PureRenderMixin = React.addons.PureRenderMixin;
+
+	var ArticleHeader = React.createClass({displayName: "ArticleHeader",
+		render: function(){
+			var hasBackgrounds = this.props.story.backgrounds.length > 0;
+			var classesHeaderPiture = classNames(
+				"article-header-picture",{
+					"radius-all": !hasBackgrounds,
+					"radius-top": hasBackgrounds
+				}
+			);
+
+			var classesHeaderCaption = classNames("article-header-picture",
+				{
+					"radius-bottom":!hasBackgrounds
+				}
+			);
+
+			//没有版权信息时隐藏
+			var classesImageSource = classNames(
+				{
+					"hide":!this.props.story.imageSource
+				}
+			);
+
+			var rows = [];
+			var titleRow = 
+				React.createElement("div", {className: "article-header-title", key: "article-header"}, 
+					React.createElement("button", {type: "button", className: "close", "data-diamiss": "modal"}, 
+						React.createElement("span", null, "×")
+					), 
+					React.createElement("div", {className: classesHeaderPiture, style: {background: "url(" + this.props.story.image + ")"}}, 
+						React.createElement("div", {className: classesHeaderCaption}, 
+							React.createElement("a", {href: this.props.story.hsareURL, target: "_blank"}, 
+								React.createElement("h3", null, this.props.story.title)
+							), 
+							React.createElement("a", {className: classesImageSource, target: "_blank", href: "https://www.google.com/search?q=" + this.props.story.imageSource}, 
+								React.createElement("span", {className: "glyphicon glyphicon-copyright-mark"}), 
+								this.props.story.imageSource
+							)
+						)
+					)
+				);
+			rows.push(titleRow);
+
+			if(hasBackgrounds){
+				var backgroundRows = _.map(this.props.story.backgrounds, function(value, i){
+					return (
+						React.createElement("a", {className: "article-backgrounds-content", 
+						 href: value.href, 
+						 target: "_blank", 
+						 key: "background" + i}, 
+						 	React.createElement("h4", null, value.title + ":" + value.text)
+						)
+					);
+				});
+
+				rows.push(
+					React.createElement("div", {className: "article-backgrounds", key: "article-backgrounds"}, 
+						backgroundRows, 
+						React.createElement("span", {className: "article-backgrounds-arrow glyphicon glyphicon-chevron-right"})
+					)
+				);
+			}
+
+			return (
+				React.createElement("div", {className: "ArticleHeader modal-header"}, 
+					rows
+				)
+			);
+		}
+	});
+
+	var ArticleBody = React.createClass({displayName: "ArticleBody",
+		render: function(){
+			var questions = [];
+			var item = null;
+			var length = this.props.contents.length;
+			console.log(this.props.contents);
+			for(var i = 0; i< length; i++){
+				//innerRows 包含标题、答案、外链
+				var innerRows = [];
+				item = this.props.contents[i];
+
+				//1、标题
+				if(!_.isEmpty(item.title)){
+					innerRows.push(React.createElement("h3", {classNames: "questions-title", key: "questions-title"+i}, item.title))
+				}
+				//2、答案
+				var answers = _.map(item.answers, function(value, j){
+					var classesAvatar = classNames(
+						"avatar",
+						{
+							"hide":_.isEmpty(value.avatar)
+						}
+					);
+
+					return (
+						React.createElement("div", {className: "question-answer", key: "question-answer-"+i+"-"+j}, 
+							React.createElement("div", {className: "questions-answer-meta"}, 
+								React.createElement("img", {className: classesAvatar, src: value.avatar}), 
+								React.createElement("span", {className: "author"}, value.name), 
+								React.createElement("span", {className: "bio"}, value.name)
+							), 
+							React.createElement("div", {className: "question-answer-content", dangerouslySetInnerHTML: {__html:value.content}})
+						)
+					);
+				});
+
+				Array.prototype.push.apply(innerRows, answers);
+				
+				//外链
+				if(item.link){
+					innerRows.push(
+						React.createElement("div", {className: "view-more", key: "view-more" + i}, 
+							React.createElement("a", {href: item.link.href, target: "_blank"}, React.createElement("b", null, item.link.text))
+						)
+					);
+				}
+
+				questions.push(
+					React.createElement("div", {className: "question", key: "question" + i}, 
+						innerRows
+					)
+				);
+
+				//分隔符
+				if(i < length -1){
+					questions.push(React.createElement("hr", {className: "question-separator", key: "question-separator" + i}));
+				}
+			}
+			return (
+				React.createElement("div", {className: "ArticleBody modal-body"}, 
+					questions
+				)
+			);
+		}
+	});
+
+	var ArticleView = React.createClass({displayName: "ArticleView",
+		mixins:[PureRenderMixin],
+		getDefaultProps: function(){
+			return {
+				id: "ArticleView"
+			};
+		},
+
+		render: function(){
+			var rows = [];
+			if(this.props.story){
+				rows = [
+					React.createElement(ArticleHeader, {key: "header", story: this.props.story}),
+					React.createElement(ArticleBody, {key: "body", contents: this.props.story.contents})
+				];
+			}
+
+			return (
+				React.createElement("div", {id: this.props.id, className: "ArticleView modal fade"}, 
+					React.createElement("div", {className: "modal-dialog modal-lg"}, 
+	                    React.createElement("div", {className: "modal-content"}, 
+						rows
+						)
+					)
+				)
+			);
+		}
+	});
+
+	module.exports = ArticleView;
+
+/***/ },
+/* 29 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
