@@ -77,7 +77,6 @@ var DailyPage = React.createClass({
 			loading:true
 		}, function(){
 			DailyManager.getStoryIndexes(function(p_data){
-
 				if(this.isMounted() && p_data && !p_data.error){
 					this._currentLoadedDate = p_data.date;
 					this._addStoryIndexes(p_data.indexes);
